@@ -23,4 +23,6 @@ public interface FileListService extends BaseService<FileList,Long>{
     FileList create(FileListPojo.ListDTO listDTO,FileList parent);
 
     void createBatch(List<FileListPojo.ListDTO> list,FileList parent);
+
+    void createByJdbc(FileListPojo.ListDTO fileList,FileList parent);
 }

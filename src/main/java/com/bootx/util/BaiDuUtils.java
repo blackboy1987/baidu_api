@@ -81,6 +81,7 @@ public class BaiDuUtils {
      * @return
      */
     public static FileListPojo fileList(String token,String dir,Integer folder) {
+        System.out.println("文件目录："+dir);
         if(StringUtils.isBlank(dir)){
             dir = "/shortVideo";
         }
@@ -368,7 +369,6 @@ public class BaiDuUtils {
 
 
     public static String shareSet(String token,String fsIdList) {
-        System.out.println(shareThirdld + "["+fsIdList+"]" + 4 + shareSecret);
         Map<String, Object> params = new HashMap(16);
         params.put("fid_list", "["+fsIdList+"]");
         params.put("period", 7);
@@ -376,8 +376,6 @@ public class BaiDuUtils {
         params.put("csign", DigestUtils.md5Hex(shareThirdld + "["+fsIdList+"]" + 4 + shareSecret));
         params.put("schannel", 4);
         String url="https://pan.baidu.com/rest/2.0/xpan/share/set?access_token=" + token;
-        System.out.println(url);
-        System.out.println(JsonUtils.toJson(params));
         String s = WebUtils.post(url, params);
         System.out.println(s);
         return s;
@@ -417,7 +415,6 @@ public class BaiDuUtils {
         params.put("folder", folder);
         params.put("showempty", showempty);
         String s = WebUtils.get("http://pan.baidu.com/rest/2.0/xpan/file", params);
-        System.out.println(s);
         return JsonUtils.toObject(s, new TypeReference<FileListPojo>() {
         });
     }
@@ -442,8 +439,6 @@ public class BaiDuUtils {
         params.put("async", 0);
         params.put("filelist",JsonUtils.toJson(fileList));
         String url="http://pan.baidu.com/rest/2.0/xpan/file?method=filemanager&access_token="+token+"&opera=delete";
-        System.out.println(url);
-        System.out.println(JsonUtils.toJson(params));
         String s = WebUtils.postBody(url, params);
         System.out.println(s);
         return s;

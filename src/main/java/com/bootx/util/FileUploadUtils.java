@@ -19,7 +19,6 @@ public class FileUploadUtils {
         try {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, path, new ByteArrayInputStream(content.getBytes()));
             PutObjectResult result = ossClient.putObject(putObjectRequest);
-            System.out.println(JsonUtils.toJson(result));
         } catch (OSSException oe) {
             System.out.println("Caught an OSSException, which means your request made it to OSS, "
                     + "but was rejected with an error response for some reason.");

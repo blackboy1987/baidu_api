@@ -49,9 +49,6 @@ public class BaseController {
 		if (constraintViolations.isEmpty()) {
 			return true;
 		}
-		for (ConstraintViolation<Object> constraintViolation : constraintViolations) {
-			System.out.println(constraintViolation.getPropertyPath()+":"+constraintViolation.getMessage());
-		}
 		RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
 		requestAttributes.setAttribute(CONSTRAINT_VIOLATIONS_ATTRIBUTE_NAME, constraintViolations, RequestAttributes.SCOPE_REQUEST);
 		return false;

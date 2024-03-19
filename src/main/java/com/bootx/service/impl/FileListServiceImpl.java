@@ -45,8 +45,8 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
         String token = baiDuAccessTokenService.getToken();
         FileListPojo fileListPojo = BaiDuUtils.list(token, path);
         if (!fileListPojo.getList().isEmpty()) {
+            createBatch(fileListPojo.getList(),parent);
             fileListPojo.getList().forEach(fileList -> {
-                createByJdbc(fileList,parent);
                 if(fileList.getCategory()==6){
                     create(fileList.getPath());
                 }
@@ -83,8 +83,9 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
         fileList.setGrade(fileList.getParentIds().length);
     }
 
-    private void createByJdbc(FileListPojo.ListDTO fileList,FileList parent) {
-        int update = jdbcTemplate.update("insert into filelist(" +
+    @Override
+    public void createByJdbc(FileListPojo.ListDTO fileList,FileList parent) {
+        jdbcTemplate.update("insert into filelist(" +
                         "createdDate, lastModifiedDate, version, " +
                         "orders, category, fileName, fsId, grade, localCTime, localMTime, status, path, playUrl, serverCTime, serverMTime, treePath, parent_id) value (" +
                         "NOW(),NOW(),0" +
@@ -104,9 +105,9 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
                 parent == null ? "," : parent.getTreePath() + parent.getId() + ",",
                 parent == null ? null : parent.getId()
         );
-        System.out.println(update);
     }
 
+    @Override
     @Transactional
     public FileList create(FileListPojo.ListDTO fileList,FileList parent) {
         FileList current = findByFsId(fileList.getFsId());
@@ -152,6 +153,7 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
         CompletableFuture.runAsync(()->{
             List<Object[]> objects = new ArrayList<>();
             for (FileListPojo.ListDTO listDTO : list) {
+                System.out.println(listDTO.getPath()+":"+parent);
                 Object[] obj = new Object[15];
                 // orders
                 obj[0] = listDTO.getCategory()==6?null:getOrder(listDTO.getServerFilename());
