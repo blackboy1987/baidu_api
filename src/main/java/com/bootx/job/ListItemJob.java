@@ -42,7 +42,7 @@ public class ListItemJob {
         }
     }
 
-    @Scheduled(fixedRate = 1000*60*60*20)
+    //@Scheduled(fixedRate = 1000*60*60*20)
     public void run0() {
         // 从网盘里面拉取文件
         String token = baiDuAccessTokenService.getToken();
@@ -51,6 +51,7 @@ public class ListItemJob {
     }
 
     @Scheduled(fixedRate = 1000*60*60*24*3)
+    //@Scheduled(cron = "0 0 3 * *  ?")
     public void run1() {
         jdbcTemplate.update("truncate filelist;");
         update(null);
@@ -64,7 +65,7 @@ public class ListItemJob {
         // 从网盘里面拉取文件
         String token = baiDuAccessTokenService.getToken();
         if(grade==null){
-            FileListPojo list = BaiDuUtils.fileList(token, "/",0);
+            FileListPojo list = BaiDuUtils.fileList(token, "/shortVideo",0);
             fileListService.createBatch(list.getList(),null);
         }else{
             List<Map<String, Object>> maps = jdbcTemplate.queryForList("select path,id from filelist where grade=? and category=6",grade);
