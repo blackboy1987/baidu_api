@@ -76,6 +76,28 @@ public class FileList extends OrderedEntity<Long>{
     @Column(length = 2000)
     private String cover;
 
+    private Integer duration;
+
+
+    private Long size;
+
+
+    public Integer getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public void setSize(Long size) {
+        this.size = size;
+    }
+
     public String getCover() {
         return cover;
     }

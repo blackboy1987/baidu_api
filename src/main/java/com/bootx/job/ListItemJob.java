@@ -2,10 +2,13 @@ package com.bootx.job;
 
 import com.bootx.entity.FileList;
 import com.bootx.pojo.FileListPojo;
+import com.bootx.pojo.FileMetasPojo;
 import com.bootx.service.BaiDuAccessTokenService;
 import com.bootx.service.FileListService;
+import com.bootx.service.RedisService;
 import com.bootx.util.BaiDuUtils;
 import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -29,6 +32,9 @@ public class ListItemJob {
     @Resource
     private JdbcTemplate jdbcTemplate;
 
+    @Resource
+    private RedisService redisService;
+
 
     //@Scheduled(fixedRate = 1000*60*60*20)
     public void run() {
@@ -51,12 +57,60 @@ public class ListItemJob {
     }
 
     @Scheduled(fixedRate = 1000*60*60*24*3)
-    //@Scheduled(cron = "0 0 3 * *  ?")
     public void run1() {
         jdbcTemplate.update("truncate filelist;");
         update(null);
         for (int i = 0; i < 20; i++) {
             update(i);
+        }
+    }
+
+    @Scheduled(fixedRate = 10)
+    public void fileMate() {
+        String token = baiDuAccessTokenService.getToken();
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fsId,id from filelist where category=1 and size is null ORDER BY RAND() LIMIT 10");
+        maps.forEach(item->{
+            FileMetasPojo filemetas = BaiDuUtils.filemetas(token, item.get("fsId") + "");
+            if(filemetas.getList().size()==1){
+                FileMetasPojo.ListBean listBean = filemetas.getList().get(0);
+                Integer duration = listBean.getDuration();
+                Long size = listBean.getSize();
+                FileList fileList = fileListService.findByFsId(Long.valueOf(item.get("fsId")+""));
+                fileList.setDuration(duration);
+                fileList.setSize(size);
+                fileListService.update(fileList);
+            }
+        });
+    }
+    @Scheduled(fixedRate = 10)
+    public void rename() {
+        String code = redisService.get("code");
+        String token = baiDuAccessTokenService.getToken();
+        if(StringUtils.isNotBlank(code)){
+            String[] codes = code.split("_");
+            if(codes.length>=1){
+                List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fileName,path,fsId,id from filelist where fileName like '%"+codes[0]+"%' limit 10");
+                maps.forEach(item->{
+                    String path = item.get("path")+"";
+                    String newName = item.get("fileName")+"";
+                    if(codes.length==1){
+                        newName = newName.replaceAll(codes[0], "");
+                    }else{
+                        newName = newName.replaceAll(codes[0], codes[1]);
+                    }
+                    BaiDuUtils.rename(token,path,newName);
+                    System.out.println("开始重命名数据库");
+                    FileMetasPojo filemetas = BaiDuUtils.filemetas(token, item.get("fsId") + "");
+                    if(filemetas.getList().size()==1){
+                        FileList fileList = fileListService.findByFsId(Long.valueOf(item.get("fsId")+""));
+                        fileList.setPath(filemetas.getList().get(0).getPath());
+                        fileList.setFileName(filemetas.getList().get(0).getFilename());
+                        fileListService.update(fileList);
+                    }
+                });
+            }
+        }else{
+            System.out.println("code is empty");
         }
     }
 

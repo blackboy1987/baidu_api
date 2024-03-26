@@ -8,8 +8,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,8 +103,12 @@ public class BaiDuUtils {
                 response.append(inputLine);
             }
             in.close();
-            return JsonUtils.toObject(response.toString(), new TypeReference<FileListPojo>() {
+            FileListPojo object = JsonUtils.toObject(response.toString(), new TypeReference<FileListPojo>() {
             });
+            if(object.getList().isEmpty()){
+                System.out.println(response.toString());
+            }
+            return object;
         }catch (Exception e){
             e.printStackTrace();
             FileListPojo fileListPojo = new FileListPojo();
@@ -334,6 +340,7 @@ public class BaiDuUtils {
                 response.append(inputLine);
             }
             in.close();
+            System.out.println(response.toString());
             return JsonUtils.toObject(response.toString(), new TypeReference<FileMetasPojo>() {
             });
         }catch (Exception e){
@@ -364,7 +371,7 @@ public class BaiDuUtils {
     }
 
     private static String parsePath(String path){
-        return path.replaceAll(" ","%20");
+        return path.replaceAll(" ","%20").replaceAll("&","%26");
     }
 
 
@@ -465,7 +472,20 @@ public class BaiDuUtils {
 
     public static void main(String[] args) {
         String token = "121.3b6dd2b52b40b5478767a79f9c5facb6.YQbCWdedA74iNzcQIdvSCOn-p5z1rkROrPzSEYS.DITsEg";
-        Pageable pageable = new Pageable();
-        search(token,"一","/shortVideo",6,pageable,1,1);
+    }
+
+    public static void rename(String token,String path,String newName){
+        String url1="https://pan.baidu.com/rest/2.0/xpan/file?method=filemanager&access_token="+token+"&opera=rename";
+        Map<String,Object> params = new HashMap<>();
+        params.put("async",1);
+        List<Map<String,Object>> fileList = new ArrayList<>();
+        Map<String,Object> map = new HashMap<>();
+        map.put("path",path);
+        map.put("newname",newName);
+        fileList.add(map);
+        params.put("filelist",JsonUtils.toJson(fileList));
+        params.put("ondup","fail");
+        String s = WebUtils.post(url1, params);
+        System.out.println(s);
     }
 }

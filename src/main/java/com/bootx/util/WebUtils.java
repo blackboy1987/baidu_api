@@ -6,24 +6,27 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
-import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
-import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.core5.http.*;
-import org.apache.hc.core5.http.config.RegistryBuilder;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.http.message.BasicNameValuePair;
-import org.apache.hc.core5.net.URLEncodedUtils;
-import org.apache.hc.core5.util.Timeout;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.springframework.util.Assert;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -60,7 +63,7 @@ public final class WebUtils {
 		HTTP_CLIENT_CONNECTION_MANAGER = new PoolingHttpClientConnectionManager(RegistryBuilder.<ConnectionSocketFactory>create().register("http", PlainConnectionSocketFactory.getSocketFactory()).register("https", SSLConnectionSocketFactory.getSocketFactory()).build());
 		HTTP_CLIENT_CONNECTION_MANAGER.setDefaultMaxPerRoute(100);
 		HTTP_CLIENT_CONNECTION_MANAGER.setMaxTotal(200);
-		RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(Timeout.ofSeconds(60000)).setConnectTimeout(Timeout.ofSeconds(60000)).build();
+		RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(60000).setConnectTimeout(60000).setSocketTimeout(60000).build();
 		HTTP_CLIENT = HttpClientBuilder.create().setConnectionManager(HTTP_CLIENT_CONNECTION_MANAGER).setDefaultRequestConfig(requestConfig).build();
 	}
 
@@ -207,17 +210,21 @@ public final class WebUtils {
 	public static String post(String url, Map<String, Object> parameterMap) {
 		Assert.hasText(url, "[Assertion failed] - url must have text; it must not be null, empty, or blank");
 
-		List<NameValuePair> nameValuePairs = new ArrayList<>();
-		if (parameterMap != null) {
-			for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
-				String name = entry.getKey();
-				String value = ConvertUtils.convert(entry.getValue());
-				if (StringUtils.isNotEmpty(name)) {
-					nameValuePairs.add(new BasicNameValuePair(name, value));
+		try {
+			List<NameValuePair> nameValuePairs = new ArrayList<>();
+			if (parameterMap != null) {
+				for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
+					String name = entry.getKey();
+					String value = ConvertUtils.convert(entry.getValue());
+					if (StringUtils.isNotEmpty(name)) {
+						nameValuePairs.add(new BasicNameValuePair(name, value));
+					}
 				}
 			}
+			return post(url, null, new UrlEncodedFormEntity(nameValuePairs, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e.getMessage(), e);
 		}
-		return post(url, null, new UrlEncodedFormEntity(nameValuePairs));
 	}
 
 	/**
@@ -408,5 +415,28 @@ public final class WebUtils {
 		}
 
 		return null;
+	}
+
+	public static String postJson(String url, String json) {
+		Assert.hasText(url,"");
+
+		String result = null;
+		try {
+			HttpPost httpPost = new HttpPost(url);
+			StringEntity entity = new StringEntity(json,"utf-8");//解决中文乱码问题
+			entity.setContentEncoding("UTF-8");
+			entity.setContentType("application/json");
+			httpPost.setEntity(entity);
+			try (CloseableHttpResponse httpResponse = HTTP_CLIENT.execute(httpPost)) {
+				HttpEntity httpEntity = httpResponse.getEntity();
+				if (httpEntity != null) {
+					result = EntityUtils.toString(httpEntity);
+					EntityUtils.consume(httpEntity);
+				}
+			}
+		} catch (ParseException | IOException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		return result;
 	}
 }

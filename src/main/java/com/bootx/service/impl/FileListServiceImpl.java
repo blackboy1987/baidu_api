@@ -150,45 +150,43 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
 
     @Override
     public void createBatch(List<FileListPojo.ListDTO> list,FileList parent) {
-        CompletableFuture.runAsync(()->{
-            List<Object[]> objects = new ArrayList<>();
-            for (FileListPojo.ListDTO listDTO : list) {
-                System.out.println(listDTO.getPath()+":"+parent);
-                Object[] obj = new Object[15];
-                // orders
-                obj[0] = listDTO.getCategory()==6?null:getOrder(listDTO.getServerFilename());
-                // category
-                obj[1] = listDTO.getCategory();
-                // cover
-                obj[2] = null;
-                // fileName
-                obj[3] = listDTO.getServerFilename();
-                // fsId
-                obj[4] = listDTO.getFsId();
-                // grade
-                obj[5] = parent==null?0:parent.getGrade()+1;
-                // localCTime
-                obj[6] = listDTO.getLocalCtime();
-                // localMTime
-                obj[7] = listDTO.getLocalMtime();
-                // needUpdate
-                obj[8] = listDTO.getCategory()==6?1:0;
-                // path
-                obj[9] = listDTO.getPath();
-                // playUrl
-                obj[10] = null;
-                // serverCTime
-                obj[11] = listDTO.getServerCtime();
-                // serverMTime
-                obj[12] = listDTO.getServerMtime();
-                // treePath
-                obj[13] = parent!=null?parent.getTreePath()+parent.getId()+",":",";
-                // parent_id
-                obj[14] = parent==null?null:parent.getId();
-                objects.add(obj);
-            }
-            jdbcTemplate.batchUpdate("insert into filelist(createdDate, lastModifiedDate, version, orders, category, cover, fileName, fsId, grade, localCTime, localMTime, status, path, playUrl, serverCTime, serverMTime, treePath, parent_id) value (NOW(),NOW(),0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE version=version+1,lastModifiedDate=NOW()", objects);
-        });
+        List<Object[]> objects = new ArrayList<>();
+        for (FileListPojo.ListDTO listDTO : list) {
+            System.out.println(listDTO.getPath()+":"+parent);
+            Object[] obj = new Object[15];
+            // orders
+            obj[0] = listDTO.getCategory()==6?null:getOrder(listDTO.getServerFilename());
+            // category
+            obj[1] = listDTO.getCategory();
+            // cover
+            obj[2] = null;
+            // fileName
+            obj[3] = listDTO.getServerFilename();
+            // fsId
+            obj[4] = listDTO.getFsId();
+            // grade
+            obj[5] = parent==null?0:parent.getGrade()+1;
+            // localCTime
+            obj[6] = listDTO.getLocalCtime();
+            // localMTime
+            obj[7] = listDTO.getLocalMtime();
+            // needUpdate
+            obj[8] = listDTO.getCategory()==6?1:0;
+            // path
+            obj[9] = listDTO.getPath();
+            // playUrl
+            obj[10] = null;
+            // serverCTime
+            obj[11] = listDTO.getServerCtime();
+            // serverMTime
+            obj[12] = listDTO.getServerMtime();
+            // treePath
+            obj[13] = parent!=null?parent.getTreePath()+parent.getId()+",":",";
+            // parent_id
+            obj[14] = parent==null?null:parent.getId();
+            objects.add(obj);
+        }
+        jdbcTemplate.batchUpdate("insert into filelist(createdDate, lastModifiedDate, version, orders, category, cover, fileName, fsId, grade, localCTime, localMTime, status, path, playUrl, serverCTime, serverMTime, treePath, parent_id) value (NOW(),NOW(),0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE version=version+1,lastModifiedDate=NOW()", objects);
     }
 
 
