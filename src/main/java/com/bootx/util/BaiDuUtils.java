@@ -443,10 +443,10 @@ public class BaiDuUtils {
      */
     public static String delete(String token, List<String> fileList) {
         Map<String, Object> params = new HashMap(16);
-        params.put("async", 0);
+        params.put("async", 1);
         params.put("filelist",JsonUtils.toJson(fileList));
         String url="http://pan.baidu.com/rest/2.0/xpan/file?method=filemanager&access_token="+token+"&opera=delete";
-        String s = WebUtils.postBody(url, params);
+        String s = WebUtils.post(url, params);
         System.out.println(s);
         return s;
     }
@@ -472,6 +472,9 @@ public class BaiDuUtils {
 
     public static void main(String[] args) {
         String token = "121.3b6dd2b52b40b5478767a79f9c5facb6.YQbCWdedA74iNzcQIdvSCOn-p5z1rkROrPzSEYS.DITsEg";
+        List<String> fileList = new ArrayList<>();
+        fileList.add("/shortVideo/2024/2024热门剧/全/许你光芒万丈（100集）");
+        delete(token,fileList);
     }
 
     public static void rename(String token,String path,String newName){
