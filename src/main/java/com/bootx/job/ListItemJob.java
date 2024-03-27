@@ -60,7 +60,7 @@ public class ListItemJob {
         fileListService.createBatch(list.getList(),null);
     }
 
-   // @Scheduled(fixedRate = 1000*60*60*24*3)
+    //@Scheduled(fixedRate = 1000*60*60*24*3)
     public void run1() {
         jdbcTemplate.update("truncate filelist;");
         update(null);
@@ -69,19 +69,32 @@ public class ListItemJob {
         }
     }
 
+    @Scheduled(fixedRate = 1000*60*60*24)
+    public void move() {
+        String token = baiDuAccessTokenService.getToken();
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select path,fileName from filelist where grade=11 and path like '/shortVideo/上千部短剧/月/日/重生嫡妃/368、重生嫡妃不好惹/368、重生嫡妃不好惹/我治好了新婚老公的绝症/重生/网剧大全/狂野小农民/01-短剧143集/%';");
+        for (Map<String, Object> map : maps) {
+            String path = map.get("path")+"";
+            String dest = "/shortVideo/上千部短剧/月/日/狂野小农民";
+            BaiDuUtils.move(token, path,dest,map.get("fileName")+"");
+        }
+    }
+
     @Scheduled(fixedRate = 2)
     public void fileMate() {
         String token = baiDuAccessTokenService.getToken();
         List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fsId,id from filelist where category=1 and size is null ORDER BY RAND() LIMIT 100");
-        long start = System.currentTimeMillis();
-        List<String> fsIds = maps.stream().map(item -> item.get("fsId") + "").toList();
-        FileMetasPojo filemetas = BaiDuUtils.filemetas(token, StringUtils.join(fsIds,","));
-        System.out.println(System.currentTimeMillis()-start);
-        executorService.submit(()->{
-            fileListService.batchUpdate(filemetas.getList());
-        });
+        if(!maps.isEmpty()){
+            long start = System.currentTimeMillis();
+            List<String> fsIds = maps.stream().map(item -> item.get("fsId") + "").toList();
+            FileMetasPojo filemetas = BaiDuUtils.filemetas(token, StringUtils.join(fsIds,","));
+            System.out.println(System.currentTimeMillis()-start);
+            executorService.submit(()->{
+                fileListService.batchUpdate(filemetas.getList());
+            });
+        }
     }
-   // @Scheduled(fixedRate = 10)
+    @Scheduled(fixedRate = 10)
     public void rename() {
         String code = redisService.get("code");
         String token = baiDuAccessTokenService.getToken();

@@ -471,9 +471,7 @@ public class BaiDuUtils {
 
     public static void main(String[] args) {
         String token = "121.3b6dd2b52b40b5478767a79f9c5facb6.YQbCWdedA74iNzcQIdvSCOn-p5z1rkROrPzSEYS.DITsEg";
-        List<String> fileList = new ArrayList<>();
-        fileList.add("/shortVideo/2024/2024热门剧/全/许你光芒万丈（100集）");
-        delete(token,fileList);
+        move(token,"/shortVideo/新片源3/月/日/96：隐面佳人.mp4","/shortVideo/新片源3/月/日/96：隐面佳人","96：隐面佳人.mp4");
     }
 
     public static void rename(String token,String path,String newName){
@@ -483,6 +481,23 @@ public class BaiDuUtils {
         List<Map<String,Object>> fileList = new ArrayList<>();
         Map<String,Object> map = new HashMap<>();
         map.put("path",path);
+        map.put("newname",newName);
+        fileList.add(map);
+        params.put("filelist",JsonUtils.toJson(fileList));
+        params.put("ondup","fail");
+        String s = WebUtils.post(url1, params);
+        System.out.println(s);
+    }
+
+    public static void move(String token,String path,String dest,String newName){
+        String url1="https://pan.baidu.com/rest/2.0/xpan/file?method=filemanager&access_token="+token+"&opera=move";
+        Map<String,Object> params = new HashMap<>();
+        params.put("async",1);
+        List<Map<String,Object>> fileList = new ArrayList<>();
+        Map<String,Object> map = new HashMap<>();
+        map.put("path",path);
+        map.put("dest",dest);
+        map.put("ondup","fail");
         map.put("newname",newName);
         fileList.add(map);
         params.put("filelist",JsonUtils.toJson(fileList));
