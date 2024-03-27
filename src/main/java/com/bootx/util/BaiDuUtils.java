@@ -340,7 +340,6 @@ public class BaiDuUtils {
                 response.append(inputLine);
             }
             in.close();
-            System.out.println(response.toString());
             return JsonUtils.toObject(response.toString(), new TypeReference<FileMetasPojo>() {
             });
         }catch (Exception e){

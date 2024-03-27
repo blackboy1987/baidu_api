@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author black
@@ -34,6 +36,8 @@ public class ListItemJob {
 
     @Resource
     private RedisService redisService;
+
+    private ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
 
 
     //@Scheduled(fixedRate = 1000*60*60*20)
@@ -56,7 +60,7 @@ public class ListItemJob {
         fileListService.createBatch(list.getList(),null);
     }
 
-    @Scheduled(fixedRate = 1000*60*60*24*3)
+   // @Scheduled(fixedRate = 1000*60*60*24*3)
     public void run1() {
         jdbcTemplate.update("truncate filelist;");
         update(null);
@@ -65,24 +69,19 @@ public class ListItemJob {
         }
     }
 
-    @Scheduled(fixedRate = 10)
+    @Scheduled(fixedRate = 2)
     public void fileMate() {
         String token = baiDuAccessTokenService.getToken();
-        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fsId,id from filelist where category=1 and size is null ORDER BY RAND() LIMIT 10");
-        maps.forEach(item->{
-            FileMetasPojo filemetas = BaiDuUtils.filemetas(token, item.get("fsId") + "");
-            if(filemetas.getList().size()==1){
-                FileMetasPojo.ListBean listBean = filemetas.getList().get(0);
-                Integer duration = listBean.getDuration();
-                Long size = listBean.getSize();
-                FileList fileList = fileListService.findByFsId(Long.valueOf(item.get("fsId")+""));
-                fileList.setDuration(duration);
-                fileList.setSize(size);
-                fileListService.update(fileList);
-            }
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fsId,id from filelist where category=1 and size is null ORDER BY RAND() LIMIT 100");
+        long start = System.currentTimeMillis();
+        List<String> fsIds = maps.stream().map(item -> item.get("fsId") + "").toList();
+        FileMetasPojo filemetas = BaiDuUtils.filemetas(token, StringUtils.join(fsIds,","));
+        System.out.println(System.currentTimeMillis()-start);
+        executorService.submit(()->{
+            fileListService.batchUpdate(filemetas.getList());
         });
     }
-    @Scheduled(fixedRate = 10)
+   // @Scheduled(fixedRate = 10)
     public void rename() {
         String code = redisService.get("code");
         String token = baiDuAccessTokenService.getToken();

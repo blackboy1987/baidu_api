@@ -2,6 +2,7 @@ package com.bootx.service;
 
 import com.bootx.entity.FileList;
 import com.bootx.pojo.FileListPojo;
+import com.bootx.pojo.FileMetasPojo;
 
 import java.util.List;
 
@@ -25,4 +26,6 @@ public interface FileListService extends BaseService<FileList,Long>{
     void createBatch(List<FileListPojo.ListDTO> list,FileList parent);
 
     void createByJdbc(FileListPojo.ListDTO fileList,FileList parent);
+
+    void batchUpdate(List<FileMetasPojo.ListBean> list);
 }

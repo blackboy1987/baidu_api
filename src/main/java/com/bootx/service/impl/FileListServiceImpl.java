@@ -3,6 +3,7 @@ package com.bootx.service.impl;
 import com.bootx.dao.FileListDao;
 import com.bootx.entity.FileList;
 import com.bootx.pojo.FileListPojo;
+import com.bootx.pojo.FileMetasPojo;
 import com.bootx.service.BaiDuAccessTokenService;
 import com.bootx.service.FileListService;
 import com.bootx.util.BaiDuUtils;
@@ -105,6 +106,24 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
                 parent == null ? "," : parent.getTreePath() + parent.getId() + ",",
                 parent == null ? null : parent.getId()
         );
+    }
+
+    @Override
+    public void batchUpdate(List<FileMetasPojo.ListBean> list) {
+        List<Object[]> objects = new ArrayList<>();
+
+        for (FileMetasPojo.ListBean listDTO : list) {
+            Object[] obj = new Object[3];
+            // size
+            obj[0] = listDTO.getSize();
+            // duration
+            obj[1] = listDTO.getDuration();
+            // fsId
+            obj[2] = listDTO.getFsId();
+            objects.add(obj);
+        }
+        int[] ints = jdbcTemplate.batchUpdate("update filelist set version=version+1,lastModifiedDate=NOW(), size=?,duration=? where fsId=? ", objects);
+        System.out.println(ints.length);
     }
 
     @Override
