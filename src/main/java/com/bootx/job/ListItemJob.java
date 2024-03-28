@@ -44,7 +44,7 @@ public class ListItemJob {
     public void run() {
         // 从网盘里面拉取文件
         String token = baiDuAccessTokenService.getToken();
-        FileListPojo list = BaiDuUtils.fileList(token, "/",0);
+        FileListPojo list = BaiDuUtils.fileList(token, "/",0,null);
         if (!list.getList().isEmpty()) {
             for (FileListPojo.ListDTO listDTO : list.getList()) {
                 check(token,listDTO,null);
@@ -56,11 +56,11 @@ public class ListItemJob {
     public void run0() {
         // 从网盘里面拉取文件
         String token = baiDuAccessTokenService.getToken();
-        FileListPojo list = BaiDuUtils.fileList(token, "/",0);
+        FileListPojo list = BaiDuUtils.fileList(token, "/",0,null);
         fileListService.createBatch(list.getList(),null);
     }
 
-    //@Scheduled(fixedRate = 1000*60*60*24*3)
+    @Scheduled(fixedRate = 1000*60*60*24*3)
     public void run1() {
         jdbcTemplate.update("truncate filelist;");
         update(null);
@@ -70,13 +70,14 @@ public class ListItemJob {
     }
 
     @Scheduled(fixedRate = 1000*60*60*24)
-    public void move() {
+    public void move() throws InterruptedException {
         String token = baiDuAccessTokenService.getToken();
         List<Map<String, Object>> maps = jdbcTemplate.queryForList("select path,fileName from filelist where grade=11 and path like '/shortVideo/上千部短剧/月/日/重生嫡妃/368、重生嫡妃不好惹/368、重生嫡妃不好惹/我治好了新婚老公的绝症/重生/网剧大全/狂野小农民/01-短剧143集/%';");
         for (Map<String, Object> map : maps) {
             String path = map.get("path")+"";
             String dest = "/shortVideo/上千部短剧/月/日/狂野小农民";
             BaiDuUtils.move(token, path,dest,map.get("fileName")+"");
+            Thread.sleep(200);
         }
     }
 
@@ -94,7 +95,7 @@ public class ListItemJob {
             });
         }
     }
-    @Scheduled(fixedRate = 10)
+    //@Scheduled(fixedRate = 10)
     public void rename() {
         String code = redisService.get("code");
         String token = baiDuAccessTokenService.getToken();
@@ -131,13 +132,15 @@ public class ListItemJob {
         // 从网盘里面拉取文件
         String token = baiDuAccessTokenService.getToken();
         if(grade==null){
-            FileListPojo list = BaiDuUtils.fileList(token, "/shortVideo",0);
-            fileListService.createBatch(list.getList(),null);
+            for (int i = 1; i <= 3; i++) {
+                FileListPojo list = BaiDuUtils.fileList(token, "/shortVideo",0,i);
+                fileListService.createBatch(list.getList(),null);
+            }
         }else{
             List<Map<String, Object>> maps = jdbcTemplate.queryForList("select path,id from filelist where grade=? and category=6",grade);
             maps.forEach(map -> {
                 String path = (String) map.get("path");
-                FileListPojo list = BaiDuUtils.fileList(token, path,0);
+                FileListPojo list = BaiDuUtils.fileList(token, path,0,null);
                 fileListService.createBatch(list.getList(),fileListService.find(Long.valueOf(map.get("id")+"")));
             });
         }
@@ -158,7 +161,7 @@ public class ListItemJob {
             flag = true;
         }
         if(flag && listDTO.getCategory()==6){
-            FileListPojo list = BaiDuUtils.fileList(token, listDTO.getPath(),null);
+            FileListPojo list = BaiDuUtils.fileList(token, listDTO.getPath(),null,null);
             if (!list.getList().isEmpty()) {
                 for (FileListPojo.ListDTO child : list.getList()) {
                     check(token,child,parent);

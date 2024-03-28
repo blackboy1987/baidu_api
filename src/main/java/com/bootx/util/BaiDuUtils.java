@@ -82,7 +82,11 @@ public class BaiDuUtils {
      * @param token
      * @return
      */
-    public static FileListPojo fileList(String token,String dir,Integer folder) {
+    public static FileListPojo fileList(String token,String dir,Integer folder,Integer page) {
+        if(page==null){
+            page = 1;
+        }
+        int start = (page-1)*1000;
         System.out.println("文件目录："+dir);
         if(StringUtils.isBlank(dir)){
             dir = "/shortVideo";
@@ -91,7 +95,7 @@ public class BaiDuUtils {
             folder = 0;
         }
 
-        String url = "https://pan.baidu.com/rest/2.0/xpan/file?method=list&dir="+parsePath(dir)+"&order=time&start=0&limit=1000&web=web&folder=0&access_token="+token+"&desc=1";
+        String url = "https://pan.baidu.com/rest/2.0/xpan/file?method=list&dir="+parsePath(dir)+"&order=time&start="+start+"&limit=1000&web=web&folder=0&access_token="+token+"&desc=1";
         try {
             URL url1 = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) url1.openConnection();
@@ -471,7 +475,10 @@ public class BaiDuUtils {
 
     public static void main(String[] args) {
         String token = "121.3b6dd2b52b40b5478767a79f9c5facb6.YQbCWdedA74iNzcQIdvSCOn-p5z1rkROrPzSEYS.DITsEg";
-        move(token,"/shortVideo/新片源3/月/日/96：隐面佳人.mp4","/shortVideo/新片源3/月/日/96：隐面佳人","96：隐面佳人.mp4");
+        move(token,
+                "/shortVideo/上千部短剧/月/日/重生嫡妃/368、重生嫡妃不好惹/368、重生嫡妃不好惹/我治好了新婚老公的绝症/重生/网剧大全/南总夫人何罪之有（80集",
+                "/shortVideo/上千部短剧/月/日/南总夫人何罪之有（80集）",
+                "南总夫人何罪之有（80集）");
     }
 
     public static void rename(String token,String path,String newName){

@@ -205,7 +205,12 @@ public class FileListServiceImpl extends BaseServiceImpl<FileList,Long> implemen
             obj[14] = parent==null?null:parent.getId();
             objects.add(obj);
         }
-        jdbcTemplate.batchUpdate("insert into filelist(createdDate, lastModifiedDate, version, orders, category, cover, fileName, fsId, grade, localCTime, localMTime, status, path, playUrl, serverCTime, serverMTime, treePath, parent_id) value (NOW(),NOW(),0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE version=version+1,lastModifiedDate=NOW()", objects);
+        try {
+            int[] ints = jdbcTemplate.batchUpdate("insert into filelist(createdDate, lastModifiedDate, version, orders, category, cover, fileName, fsId, grade, localCTime, localMTime, status, path, playUrl, serverCTime, serverMTime, treePath, parent_id) value (NOW(),NOW(),0,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE version=version+1,lastModifiedDate=NOW()", objects);
+            System.out.println(ints.length);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 
