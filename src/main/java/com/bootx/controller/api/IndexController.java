@@ -52,7 +52,7 @@ public class IndexController extends BaseController {
         if(fileList==null || fileList.getChildren().isEmpty() || fileList.getCategory()!=6){
             return Result.success(Collections.emptyList());
         }
-        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fsId id from filelist where category=1 and treePath like ? order by orders asc ;",fileList.getTreePath()+fileList.getId()+",%");
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select fsId id,fileName name from filelist where category=1 and treePath like ? order by orders asc ;",fileList.getTreePath()+fileList.getId()+",%");
         return Result.success(maps);
     }
 

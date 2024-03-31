@@ -475,10 +475,13 @@ public class BaiDuUtils {
 
     public static void main(String[] args) {
         String token = "121.3b6dd2b52b40b5478767a79f9c5facb6.YQbCWdedA74iNzcQIdvSCOn-p5z1rkROrPzSEYS.DITsEg";
-        move(token,
+       /* move(token,
                 "/shortVideo/上千部短剧/月/日/重生嫡妃/368、重生嫡妃不好惹/368、重生嫡妃不好惹/我治好了新婚老公的绝症/重生/网剧大全/南总夫人何罪之有（80集",
                 "/shortVideo/上千部短剧/月/日/南总夫人何罪之有（80集）",
-                "南总夫人何罪之有（80集）");
+                "南总夫人何罪之有（80集）");*/
+        List<String> fileList = new ArrayList<>();
+        fileList.add("/shortVideo/2022/demo/重回1998 李琦");
+        delete(token,fileList);
     }
 
     public static void rename(String token,String path,String newName){
